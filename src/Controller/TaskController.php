@@ -25,16 +25,38 @@ class TaskController extends AbstractController
     public function list(Request $request): JsonResponse
     {
         $status = $request->query->get('status');
+        $priority = $request->query->get('priority');
+        $search = $request->query->get('search');
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 10);
 
-        if ($status) {
+        if ($search) {
+            $tasks = $this->taskRepository->search($search);
+            $total = count($tasks);
+            $totalPages = 1;
+        } elseif ($status) {
             $tasks = $this->taskRepository->findByStatus($status);
+            $total = count($tasks);
+            $totalPages = 1;
+        } elseif ($priority) {
+            $tasks = $this->taskRepository->findByPriority($priority);
+            $total = count($tasks);
+            $totalPages = 1;
         } else {
-            $tasks = $this->taskRepository->findAll();
+            $tasks = $this->taskRepository->findWithPagination($page, $limit);
+            $total = $this->taskRepository->countAll();
+            $totalPages = ceil($total / $limit);
         }
 
         return $this->json([
             'success' => true,
-            'data' => array_map([$this, 'serializeTask'], $tasks)
+            'data' => array_map([$this, 'serializeTask'], $tasks),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $totalPages
+            ]
         ]);
     }
 
@@ -74,6 +96,22 @@ class TaskController extends AbstractController
 
         if (isset($data['status'])) {
             $task->setStatus($data['status']);
+        }
+
+        if (isset($data['priority'])) {
+            $task->setPriority($data['priority']);
+        }
+
+        if (isset($data['dueDate'])) {
+            try {
+                $dueDate = new \DateTimeImmutable($data['dueDate']);
+                $task->setDueDate($dueDate);
+            } catch (\Exception $e) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Invalid due date format. Use: YYYY-MM-DD'
+                ], Response::HTTP_BAD_REQUEST);
+            }
         }
 
         $errors = $this->validator->validate($task);
@@ -124,6 +162,20 @@ class TaskController extends AbstractController
         if (isset($data['status'])) {
             $task->setStatus($data['status']);
         }
+        if (isset($data['priority'])) {
+            $task->setPriority($data['priority']);
+        }
+        if (isset($data['dueDate'])) {
+            try {
+                $dueDate = $data['dueDate'] ? new \DateTimeImmutable($data['dueDate']) : null;
+                $task->setDueDate($dueDate);
+            } catch (\Exception $e) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Invalid due date format. Use: YYYY-MM-DD'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+        }
 
         $errors = $this->validator->validate($task);
         if (count($errors) > 0) {
@@ -163,6 +215,39 @@ class TaskController extends AbstractController
         ]);
     }
 
+    #[Route('/stats', name: 'stats', methods: ['GET'])]
+    public function stats(): JsonResponse
+    {
+        $total = $this->taskRepository->countAll();
+        $pending = $this->taskRepository->countByStatus('pending');
+        $inProgress = $this->taskRepository->countByStatus('in_progress');
+        $completed = $this->taskRepository->countByStatus('completed');
+        $overdue = count($this->taskRepository->findOverdue());
+
+        return $this->json([
+            'success' => true,
+            'data' => [
+                'total' => $total,
+                'pending' => $pending,
+                'inProgress' => $inProgress,
+                'completed' => $completed,
+                'overdue' => $overdue,
+                'completionRate' => $total > 0 ? round(($completed / $total) * 100, 2) : 0
+            ]
+        ]);
+    }
+
+    #[Route('/overdue', name: 'overdue', methods: ['GET'])]
+    public function overdue(): JsonResponse
+    {
+        $tasks = $this->taskRepository->findOverdue();
+
+        return $this->json([
+            'success' => true,
+            'data' => array_map([$this, 'serializeTask'], $tasks)
+        ]);
+    }
+
     private function serializeTask(Task $task): array
     {
         return [
@@ -170,6 +255,8 @@ class TaskController extends AbstractController
             'title' => $task->getTitle(),
             'description' => $task->getDescription(),
             'status' => $task->getStatus(),
+            'priority' => $task->getPriority(),
+            'dueDate' => $task->getDueDate()?->format('Y-m-d'),
             'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
             'updatedAt' => $task->getUpdatedAt()?->format('Y-m-d H:i:s')
         ];
