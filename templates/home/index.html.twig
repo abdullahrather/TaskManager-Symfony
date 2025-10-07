@@ -1,0 +1,373 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <span class="brand-icon">📋</span>
+            <span class="brand-text">Task Manager</span>
+        </div>
+        <div class="nav-links">
+            <a href="#dashboard" class="nav-link active" data-view="dashboard">Dashboard</a>
+            <a href="#api-docs" class="nav-link" data-view="api-docs">API Documentation</a>
+        </div>
+    </div>
+</nav>
+
+<main class="main-container">
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="view active">
+        <div class="dashboard-grid">
+            <!-- Statistics Cards -->
+            <section class="card stats-card">
+                <div class="card-body">
+                    <div class="stat-item">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Tasks</div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card stats-card">
+                <div class="card-body">
+                    <div class="stat-item">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value" id="statPending">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card stats-card">
+                <div class="card-body">
+                    <div class="stat-item">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-content">
+                            <div class="stat-label">In Progress</div>
+                            <div class="stat-value" id="statInProgress">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card stats-card">
+                <div class="card-body">
+                    <div class="stat-item">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" id="statCompleted">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Create Task Section -->
+            <section class="card card-create">
+                <div class="card-header">
+                    <h2 class="card-title">Create Task</h2>
+                </div>
+                <div class="card-body">
+                    <form id="taskForm" class="task-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskTitle" class="form-label">Title *</label>
+                                <input type="text" id="taskTitle" class="form-input" placeholder="Enter task title" required minlength="3">
+                                <span class="form-error" id="titleError"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskDescription" class="form-label">Description</label>
+                                <textarea id="taskDescription" class="form-input form-textarea" placeholder="Enter task description (optional)" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-triple">
+                            <div class="form-group">
+                                <label for="taskStatus" class="form-label">Status</label>
+                                <select id="taskStatus" class="form-input form-select">
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="taskPriority" class="form-label">Priority</label>
+                                <select id="taskPriority" class="form-input form-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="taskDueDate" class="form-label">Due Date</label>
+                                <input type="date" id="taskDueDate" class="form-input">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span class="btn-icon">➕</span>
+                            Create Task
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tasks List Section -->
+            <section class="card card-tasks">
+                <div class="card-header">
+                    <h2 class="card-title">Tasks</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-success" onclick="taskManager.loadTasks()">
+                            <span class="btn-icon">🔄</span>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search tasks...">
+                    </div>
+                    <div class="filter-bar">
+                        <button class="filter-btn active" data-status="" data-priority="">All Tasks</button>
+                        <button class="filter-btn" data-status="pending" data-priority="">Pending</button>
+                        <button class="filter-btn" data-status="in_progress" data-priority="">In Progress</button>
+                        <button class="filter-btn" data-status="completed" data-priority="">Completed</button>
+                        <span class="filter-divider">|</span>
+                        <button class="filter-btn" data-status="" data-priority="urgent">Urgent</button>
+                        <button class="filter-btn" data-status="" data-priority="high">High</button>
+                        <button class="filter-btn" data-status="" data-priority="medium">Medium</button>
+                        <button class="filter-btn" data-status="" data-priority="low">Low</button>
+                    </div>
+                    <div id="tasksList" class="tasks-grid">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p class="empty-text">No tasks available</p>
+                            <p class="empty-subtext">Create your first task to get started</p>
+                        </div>
+                    </div>
+                    <div id="pagination" class="pagination"></div>
+                </div>
+            </section>
+
+            <!-- API Response Monitor -->
+            <section class="card card-full">
+                <div class="card-header">
+                    <h2 class="card-title">API Response Monitor</h2>
+                    <button class="btn btn-sm btn-ghost" onclick="taskManager.clearResponse()">Clear</button>
+                </div>
+                <div class="card-body">
+                    <pre id="apiResponse" class="response-monitor">Waiting for API request...</pre>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- API Documentation View -->
+    <div id="api-docs-view" class="view">
+        <div class="docs-container">
+            <h1 class="docs-title">API Documentation</h1>
+
+            <section class="docs-section">
+                <h2>Base URL</h2>
+                <code class="code-block">http://localhost:8000/api</code>
+            </section>
+
+            <section class="docs-section">
+                <h2>Authentication</h2>
+                <p>Currently, no authentication is required. This is a public API.</p>
+            </section>
+
+            <section class="docs-section">
+                <h2>Endpoints</h2>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method http-get">GET</span>
+                        <code>/api/tasks</code>
+                    </div>
+                    <p class="endpoint-description">Retrieve all tasks or filter by status</p>
+                    <div class="endpoint-params">
+                        <h4>Query Parameters:</h4>
+                        <ul>
+                            <li><code>status</code> (optional) - Filter by status: pending, in_progress, completed</li>
+                        </ul>
+                    </div>
+                    <div class="endpoint-example">
+                        <h4>Example Response:</h4>
+                        <pre class="code-block">{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Task Title",
+      "description": "Task description",
+      "status": "pending",
+      "createdAt": "2025-10-07 22:51:34",
+      "updatedAt": null
+    }
+  ]
+}</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method http-get">GET</span>
+                        <code>/api/tasks/{id}</code>
+                    </div>
+                    <p class="endpoint-description">Retrieve a specific task by ID</p>
+                    <div class="endpoint-example">
+                        <h4>Example Response:</h4>
+                        <pre class="code-block">{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Task Title",
+    "description": "Task description",
+    "status": "pending",
+    "createdAt": "2025-10-07 22:51:34",
+    "updatedAt": null
+  }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method http-post">POST</span>
+                        <code>/api/tasks</code>
+                    </div>
+                    <p class="endpoint-description">Create a new task</p>
+                    <div class="endpoint-params">
+                        <h4>Request Body:</h4>
+                        <pre class="code-block">{
+  "title": "string (required, min: 3, max: 255)",
+  "description": "string (optional)",
+  "status": "string (optional, default: pending)"
+}</pre>
+                    </div>
+                    <div class="endpoint-example">
+                        <h4>Example Request:</h4>
+                        <pre class="code-block">POST /api/tasks
+Content-Type: application/json
+
+{
+  "title": "Learn Symfony",
+  "description": "Build a REST API",
+  "status": "pending"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method http-put">PUT</span>
+                        <code>/api/tasks/{id}</code>
+                    </div>
+                    <p class="endpoint-description">Update an existing task</p>
+                    <div class="endpoint-params">
+                        <h4>Request Body (all fields optional):</h4>
+                        <pre class="code-block">{
+  "title": "string",
+  "description": "string",
+  "status": "string"
+}</pre>
+                    </div>
+                    <div class="endpoint-example">
+                        <h4>Example Request:</h4>
+                        <pre class="code-block">PUT /api/tasks/1
+Content-Type: application/json
+
+{
+  "status": "completed"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method http-delete">DELETE</span>
+                        <code>/api/tasks/{id}</code>
+                    </div>
+                    <p class="endpoint-description">Delete a task</p>
+                    <div class="endpoint-example">
+                        <h4>Example Request:</h4>
+                        <pre class="code-block">DELETE /api/tasks/1</pre>
+                        <h4>Example Response:</h4>
+                        <pre class="code-block">{
+  "success": true,
+  "message": "Task deleted successfully"
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section class="docs-section">
+                <h2>Status Codes</h2>
+                <table class="docs-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>200</code></td>
+                            <td>Success</td>
+                        </tr>
+                        <tr>
+                            <td><code>201</code></td>
+                            <td>Created</td>
+                        </tr>
+                        <tr>
+                            <td><code>400</code></td>
+                            <td>Bad Request - Validation Error</td>
+                        </tr>
+                        <tr>
+                            <td><code>404</code></td>
+                            <td>Not Found</td>
+                        </tr>
+                        <tr>
+                            <td><code>500</code></td>
+                            <td>Internal Server Error</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="docs-section">
+                <h2>Validation Rules</h2>
+                <ul>
+                    <li><strong>Title:</strong> Required, 3-255 characters</li>
+                    <li><strong>Description:</strong> Optional, unlimited text</li>
+                    <li><strong>Status:</strong> Must be one of: pending, in_progress, completed</li>
+                </ul>
+            </section>
+
+            <section class="docs-section">
+                <h2>Error Response Format</h2>
+                <pre class="code-block">{
+  "success": false,
+  "error": "Error message"
+}
+
+// Validation errors
+{
+  "success": false,
+  "errors": {
+    "title": "Title cannot be blank",
+    "status": "Status must be one of: pending, in_progress, completed"
+  }
+}</pre>
+            </section>
+        </div>
+    </div>
+</main>
+{% endblock %}

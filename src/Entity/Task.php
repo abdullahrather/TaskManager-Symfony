@@ -36,6 +36,16 @@ class Task
     )]
     private string $status = 'pending';
 
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    #[Assert\Choice(
+        choices: ['low', 'medium', 'high', 'urgent'],
+        message: 'Priority must be one of: low, medium, high, urgent'
+    )]
+    private ?string $priority = 'medium';
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dueDate = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -46,6 +56,7 @@ class Task
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->status = 'pending';
+        $this->priority = 'medium';
     }
 
     public function getId(): ?int
@@ -85,6 +96,30 @@ class Task
     public function setStatus(string $status): static
     {
         $this->status = $status;
+        $this->updatedAt = new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function getPriority(): ?string
+    {
+        return $this->priority ?? 'medium';
+    }
+
+    public function setPriority(?string $priority): static
+    {
+        $this->priority = $priority ?? 'medium';
+        $this->updatedAt = new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function getDueDate(): ?\DateTimeImmutable
+    {
+        return $this->dueDate;
+    }
+
+    public function setDueDate(?\DateTimeImmutable $dueDate): static
+    {
+        $this->dueDate = $dueDate;
         $this->updatedAt = new \DateTimeImmutable();
         return $this;
     }
