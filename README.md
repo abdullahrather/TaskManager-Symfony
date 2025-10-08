@@ -25,5 +25,5 @@ A RESTful API built with Symfony 7.3 for managing tasks. Built as a learning pro
 
 ### 1. Clone the repository
 ```bash
-git clone git@github.com:abdullahrather/task-api.git
-cd task-api
+git clone git@github.com:abdullahrather/TaskManager-Symfony.git
+cd TaskManager-Symfony
