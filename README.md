@@ -1,6 +1,6 @@
 # Symfony Task Manager
 
-A task manager built with Symfony 7.3: a REST API for tasks with validation, filtering and statistics, plus a single-page front end that uses it. Data is stored in SQLite, so there's no database server to set up.
+A task manager built with Symfony 7.4: a REST API for tasks with validation, filtering and statistics, plus a single-page front end that uses it. Data is stored in SQLite, so there's no database server to set up.
 
 ## Features
 
@@ -16,7 +16,7 @@ A task manager built with Symfony 7.3: a REST API for tasks with validation, fil
 
 ## Tech stack
 
-PHP 8.2+, Symfony 7.3, Doctrine ORM 3 with migrations, SQLite, Symfony Validator, NelmioCorsBundle, Twig and plain JavaScript.
+PHP 8.2+, Symfony 7.4, Doctrine ORM 3 with migrations, SQLite, Symfony Validator, NelmioCorsBundle, Twig and plain JavaScript.
 
 ## Getting started
 
